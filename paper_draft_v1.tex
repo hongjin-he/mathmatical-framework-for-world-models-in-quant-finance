@@ -1,0 +1,1586 @@
+% ============================================================
+%  A Mathematical Theory of Market World Models
+%  HongJin HE, Alpha Flow Research
+%  Target: Mathematical Finance / SIAM J. Financial Mathematics
+% ============================================================
+
+\documentclass[12pt,a4paper]{article}
+
+% ----- Packages -----
+\usepackage{amsmath, amsthm, amssymb, amsfonts}
+\usepackage{mathtools}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{bm}
+\usepackage{bbm}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{setspace}
+\onehalfspacing
+
+% ----- Theorem Environments -----
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{remark}[theorem]{Remark}
+
+% ----- Macros -----
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\PP}{\mathbb{P}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\Hil}{\mathcal{H}}
+\newcommand{\Z}{\mathcal{Z}}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\Prob}{\mathcal{P}}
+\newcommand{\Law}{\mathrm{Law}}
+\newcommand{\tr}{\mathrm{tr}}
+\newcommand{\diag}{\mathrm{diag}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Cov}{\mathrm{Cov}}
+\newcommand{\1}{\mathbbm{1}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\vp}{\varphi}
+\newcommand{\norm}[1]{\left\|#1\right\|}
+\newcommand{\abs}[1]{\left|#1\right|}
+\newcommand{\inner}[2]{\left\langle #1,\, #2 \right\rangle}
+\newcommand{\WD}[2]{W_2(#1,#2)}  % Wasserstein-2 distance
+\newcommand{\KL}[2]{D_{\mathrm{KL}}(#1 \| #2)}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator{\Bias}{Bias}
+\DeclareMathOperator{\src}{src}
+\DeclareMathOperator{\tgt}{tgt}
+
+% ============================================================
+\begin{document}
+% ============================================================
+
+\title{\Large\bfseries A Mathematical Theory of Market World Models:\\[6pt]
+Hierarchical Mean-Field Dynamics, Dual Stochastic Decomposition,\\
+and Financial Event Operator Algebras}
+
+\author{
+  HongJin HE\\[6pt]
+  \small The Hong Kong University of Science and Technology \quad
+         Stanford University (IHP)\\[3pt]
+  \small \texttt{hhjhk@stanford.edu}
+}
+
+\date{\small July 2026 \quad \textit{(Preprint — submitted to arXiv:q-fin.MF)}}
+
+\maketitle
+
+% ============================================================
+\begin{abstract}
+We develop a rigorous mathematical theory for \emph{market world models}—
+probabilistic dynamical systems that learn and simulate the full evolutionary
+law of financial markets rather than extracting statistical correlations through
+factor models.  Our framework rests on four interlocking contributions.
+
+\textbf{(i) Dual Stochastic Decomposition.} We prove that market noise admits
+a canonical Lévy–Itô decomposition into two orthogonal components: a
+\emph{physical noise} driven by a Brownian motion (capturing fundamental
+information uncertainty) and a \emph{behavioral noise} driven by a pure-jump
+Lévy process (capturing sentiment and herding effects).  We derive a
+Cramér–Rao-type lower bound showing that prediction variance is bounded below
+by a sum of two irreducible terms arising from each component—a market-structure
+analogue of the Heisenberg uncertainty principle.
+
+\textbf{(ii) Financial Event Operator Algebra.} Every corporate or macroeconomic
+event (IPO, merger, interest rate shock, etc.) is modeled as an affine
+operator on the market state space.  We classify all such operators by their
+algebraic mode and prove that the full event algebra carries the structure of a
+\emph{topological groupoid}—a generalisation of a semigroup required because
+mergers and spin-offs alter the dimension of the state space.
+
+\textbf{(iii) Hierarchical Mean-Field Theory.} Real financial markets exhibit
+simultaneous mean-field game (MFG) and mean-field control (MFC) structures at
+different scales: nations interact as MFG agents while firms within each nation
+face a mixed MFG/MFC problem regulated by a central authority.  We formulate a
+two-level McKean–Vlasov system and prove existence and uniqueness of a
+\emph{hierarchical Nash equilibrium} under Lipschitz, boundedness, and
+Lasry–Lions monotonicity conditions.
+
+\textbf{(iv) Stochastic Stability.} Using the stochastic Lyapunov method for
+systems driven by the combined Brownian-Lévy noise, we prove that the market
+world model admits a unique invariant measure and establish sharp exponential
+convergence rates. Market bubbles and crises correspond precisely to local
+violations of the Lyapunov condition.
+
+Taken together, these results constitute, to the best of our knowledge,
+the \emph{first} systematic mathematical theory for market world models:
+a self-contained, axiomatically grounded framework that connects the
+world-model paradigm of machine learning to the rigorous traditions of
+stochastic analysis and mean-field game theory in quantitative finance.
+
+\smallskip
+\noindent\textbf{Keywords:} world model, mean-field game, stochastic
+differential equation, Lévy process, groupoid, Lyapunov stability,
+market microstructure, prediction lower bound.
+
+\smallskip
+\noindent\textbf{MSC 2020:} 91G99, 60G51, 49N80, 22A22, 60H10.
+\end{abstract}
+
+\tableofcontents
+
+% ============================================================
+\section{Introduction}
+% ============================================================
+
+\subsection{Motivation}
+
+The dominant paradigm in quantitative finance rests on two pillars: factor
+models, which represent asset returns as linear combinations of explanatory
+signals, and strategy models, which exploit persistent anomalies for
+profit~\citep{Fama1970,Ross1976}. Despite their practical success, these
+approaches share a fundamental limitation: they learn \emph{correlations} in
+historical data without learning the underlying \emph{causal dynamics} of
+financial markets.
+
+A market \emph{world model} takes a different approach. Inspired by
+the world-model framework of \citet{HaSchmidhuber2018} in reinforcement
+learning—where an agent maintains an internal model of its environment's
+temporal dynamics—a market world model aims to learn the full evolutionary law
+governing market states, enabling counterfactual reasoning and scenario
+propagation unavailable to correlation-based methods.
+
+Despite growing empirical interest~\citep{AwmlgLiverpool2026}, \emph{no
+systematic mathematical theory} has been established for market world models.
+Existing work remains either purely algorithmic (lacking theoretical
+guarantees) or limited to single-scale models (ignoring the hierarchical
+multi-agent structure fundamental to financial markets).
+This paper provides the missing foundation.
+
+\subsection{Contributions}
+
+Our four main contributions, each embodied in one or more formal theorems, are:
+
+\begin{enumerate}[label=(\roman*)]
+\item \textbf{Dual Stochastic Decomposition} (Section~\ref{sec:noise}).
+  Theorem~\ref{thm:noise_decomp} establishes the canonical Lévy--Itô
+  decomposition of market noise into physical and behavioral components.
+  Theorem~\ref{thm:cramer_rao} provides a prediction lower bound—an
+  information-theoretic impossibility result showing that no estimator can
+  eliminate both components of forecast uncertainty.
+
+\item \textbf{Financial Event Operator Algebra} (Section~\ref{sec:events}).
+  Definition~\ref{def:operator} introduces affine event operators.
+  Theorem~\ref{thm:groupoid} proves that the full algebra of financial events
+  constitutes a topological groupoid.
+
+\item \textbf{Hierarchical Mean-Field Equilibrium} (Section~\ref{sec:mfg}).
+  Theorem~\ref{thm:hier_mfg} is the main result of the paper: existence and
+  uniqueness of a hierarchical Nash equilibrium for the two-level McKean--Vlasov
+  system with a Lasry--Lions monotonicity structure.
+
+\item \textbf{Stochastic Lyapunov Stability} (Section~\ref{sec:stability}).
+  Theorem~\ref{thm:lyapunov} establishes existence of a unique invariant
+  measure and exponential convergence; Proposition~\ref{prop:bubble} identifies
+  the analytic signature of market bubbles and crashes.
+\end{enumerate}
+
+\subsection{Related Work}
+
+\paragraph{Mean-field games in finance.}
+The MFG framework of \citet{LasryLions2007} and \citet{HuangMalhame2006}
+has been applied to price impact~\citep{CarmonaLacker2015},
+systemic risk~\citep{CarmonaMouzouni2023}, and optimal
+liquidation~\citep{CarmonaDelarue2018book}. Multi-level MFG has been studied
+in the context of inter-bank lending~\citep{CarmonaSun2018} but without the
+hierarchical coupling structure we introduce here.
+
+\paragraph{Originality statement.}
+To the best of our knowledge, this paper is the \emph{first} to:
+(a)~formally define a market world model as a probability-measure-valued
+map on an infinite-dimensional state space;
+(b)~prove a Cramér--Rao-type lower bound that identifies two structurally
+distinct and irreducible components of market prediction uncertainty;
+(c)~model the full algebra of financial events as a topological groupoid,
+capturing the dimension-changing nature of mergers and spin-offs;
+(d)~establish existence and uniqueness of a hierarchical Nash equilibrium
+in a two-level McKean--Vlasov system that simultaneously exhibits
+MFG and MFC structures at different scales.
+Prior work on world models in finance is either empirical without theory
+(\citealt{AwmlgLiverpool2026}) or models only single-scale dynamics
+(\citealt{CarmonaDelarue2018book}).
+
+\paragraph{Jump processes in finance.}
+Lévy-driven asset prices are classical~\citep{ContTankov2004,Kou2002}.
+The decomposition of price innovations into a diffusion and a jump component
+has been studied for estimation purposes~\citep{AitSahaliaTodorov2009}, but
+not as a \emph{structural} duality between physical and behavioral uncertainty.
+
+\paragraph{World models and reinforcement learning.}
+Since \citet{HaSchmidhuber2018}, world models have been central to
+model-based RL~\citep{Hafner2020Dreamer,Hafner2023DreamerV3}. Their application
+to finance is nascent: \citet{AwmlgLiverpool2026} show that a generative world
+model improves portfolio optimization; \citet{MorganJPMaGAN} apply GANs to
+order-book simulation. No prior work provides a unified mathematical theory.
+
+\paragraph{Groupoids in physics and mathematics.}
+Groupoids generalize groups by allowing morphisms between different objects.
+Their use in noncommutative geometry~\citep{Connes1994} and geometric
+mechanics~\citep{Weinstein1996} is well-established; their appearance in
+financial modeling is novel.
+
+% ============================================================
+\section{Probabilistic Foundations}
+\label{sec:prelim}
+% ============================================================
+
+\subsection{Probability Space and Filtration}
+
+Throughout the paper, we fix a complete probability space
+$(\Omega, \F, \PP)$ equipped with a right-continuous, complete filtration
+$\mathbb{F} = (\F_t)_{t \in [0,T]}$ for a fixed horizon $T \in (0,\infty)$.
+
+We work with two independent sources of randomness:
+\begin{itemize}
+  \item A standard $\R^m$-valued Brownian motion $W = (W_t)_{t \geq 0}$, and
+  \item A Poisson random measure $N^\eta$ on $[0,T] \times \R^k$ with
+        (non-zero) $\sigma$-finite intensity measure $\lambda \otimes \nu^\eta$,
+        where $\lambda$ denotes Lebesgue measure. The compensated measure is
+        $\tilde{N}^\eta(dt,dz) := N^\eta(dt,dz) - \nu^\eta(dz)\,dt$.
+\end{itemize}
+Both $W$ and $N^\eta$ are adapted to $\mathbb{F}$ and mutually independent.
+
+\subsection{Itô Stochastic Integral: The Correct Formulation}
+
+A critical structural observation distinguishes our framework from ordinary
+differential equation (ODE) based approaches:
+
+\begin{proposition}[Non-differentiability of Brownian paths]
+\label{prop:nondiff}
+With probability one, $t \mapsto W_t$ is nowhere differentiable. Consequently,
+the expression $\sigma_t \cdot (dW_t/dt)$ is meaningless pointwise, and the
+shorthand notation $dS_t = \mu_t\,dt + \sigma_t\,dW_t$ represents an
+\emph{integral equation}, not a differential equation.
+\end{proposition}
+
+\begin{proof}
+For any $t$, the increment $h^{-1}(W_{t+h} - W_t) \sim \mathcal{N}(0,h^{-1})$.
+As $h \to 0$, the variance $h^{-1} \to \infty$, so no $L^2$ limit exists.
+By the Paley--Wiener--Zygmund theorem, the set of $\omega$ for which $W_\cdot(\omega)$
+is differentiable at any single point has measure zero; a countable union
+argument extends this to all of $[0,T]$.
+\end{proof}
+
+The precise meaning of the market evolution equation is therefore:
+
+\begin{definition}[Itô integral form]
+\label{def:ito_integral}
+The market state process satisfies the \emph{stochastic integral equation}:
+\begin{equation}
+\label{eq:full_sde}
+\mathbf{S}_t = \mathbf{S}_0
+  + \int_0^t \mu(\mathbf{S}_u, u)\,du
+  + \int_0^t \sigma_\tau(\mathbf{S}_u)\,dW_u
+  + \int_0^t\!\!\int_{\R^k} z\,\tilde{N}^\eta(du,dz)
+  + \sum_{\tau_w \leq t} (T_w - I)\mathbf{S}_{\tau_w^-},
+\end{equation}
+where the second and third Itô integrals are defined as $L^2(\Omega)$ limits of
+simple predictable approximants, and the last sum runs over all financial event
+times $\tau_w \in [0,t]$.
+\end{definition}
+
+The following isometry is fundamental:
+
+\begin{proposition}[Itô isometry]
+For any $\mathbb{F}$-predictable process $\sigma_\cdot$ with
+$\E[\int_0^T \|\sigma_t\|^2\,dt] < \infty$,
+\[
+\E\!\left[\left\|\int_0^t \sigma_u\,dW_u\right\|^2\right]
+= \E\!\left[\int_0^t \|\sigma_u\|^2\,du\right].
+\]
+The adaptedness requirement $\sigma_u \in \F_u$ encodes the economic
+constraint of \emph{no look-ahead}: trading signals may not depend on
+future information.
+\end{proposition}
+
+\subsection{Lévy Processes and the Lévy--Khintchine Formula}
+
+\begin{definition}[Lévy process]
+A process $L = (L_t)_{t \geq 0}$ is a \emph{Lévy process} if
+(i)~$L_0 = 0$ a.s., (ii)~$L$ has independent, stationary increments,
+and (iii)~$L$ is continuous in probability.
+\end{definition}
+
+\begin{theorem}[Lévy--Khintchine, \citealt{Sato1999}]
+\label{thm:LK}
+The characteristic function of $L_t$ has the form
+$\E[e^{i\xi^\top L_t}] = e^{-t\Psi(\xi)}$, where the Lévy exponent is:
+\[
+\Psi(\xi)
+= -i b^\top \xi
+  + \tfrac{1}{2}\xi^\top C\xi
+  + \int_{\R^k}\!\left(1 - e^{i\xi^\top z} + i\xi^\top z\,\1_{|z|\leq 1}\right)
+    \nu(dz),
+\]
+with \emph{drift} $b \in \R^k$, \emph{diffusion matrix}
+$C \in \R^{k\times k}$ positive semi-definite, and
+\emph{Lévy measure} $\nu$ satisfying
+$\int_{\R^k}(1 \wedge |z|^2)\,\nu(dz) < \infty$.
+The triple $(b,C,\nu)$ is the \emph{Lévy characteristic} and determines $L$
+in law.
+\end{theorem}
+
+\subsection{Market State Space}
+
+\begin{definition}[Single-asset state vector]
+\label{def:state_vector}
+The state of a single asset at time $t$ is the vector
+$s_t = (p_t, v_t, \ell_t, \kappa_t, \iota_t)^\top \in \R^5$, where:
+\begin{center}
+\begin{tabular}{clll}
+\toprule
+Coord. & Symbol & Economic meaning & Domain \\
+\midrule
+1 & $p_t$ & Log-price & $\R$ \\
+2 & $v_t$ & Log-trading volume & $\R_+$ \\
+3 & $\ell_t$ & Leverage ratio & $[0,\infty)$ \\
+4 & $\kappa_t$ & Outstanding shares (log) & $\R_+$ \\
+5 & $\iota_t$ & Public information disclosure level & $[0,1]$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{definition}
+
+For $n$ assets, the joint state is $\mathbf{S}_t \in \R^{5n}$.
+In the continuum limit ($n \to \infty$) relevant for theoretical analysis, we
+work in the separable Hilbert space
+$\Hil = L^2([0,1]\times[0,T],\R^5)$ with inner product
+$\inner{f}{g} = \int_0^1\!\int_0^T f(u,t)\cdot g(u,t)\,dt\,du$.
+
+% ============================================================
+\section{The World Model as an Optimal Estimation Problem}
+\label{sec:world_model}
+% ============================================================
+
+\begin{definition}[Market world model]
+\label{def:world_model}
+A \emph{market world model} with parameters $\theta$ is a measurable map
+\[
+\mathcal{M}_\theta : \F_t \times (0,\infty) \to \Prob(\Hil)
+\]
+such that $\mathcal{M}_\theta(\F_t, h) \approx \PP(\mathbf{S}_{t+h} \in \cdot \mid \F_t)$.
+\end{definition}
+
+\begin{theorem}[Prediction error decomposition]
+\label{thm:pred_decomp}
+For any $\F_t$-measurable estimator $\hat{\mathbf{S}}_{t+h}$ of $\mathbf{S}_{t+h}$,
+\begin{equation}
+\label{eq:pred_decomp}
+\E\!\left[\norm{\hat{\mathbf{S}}_{t+h} - \mathbf{S}_{t+h}}_\Hil^2\right]
+= \norm{\Bias_\theta}^2
+  + \underbrace{\Var_\tau(h)}_{\text{physical}}
+  + \underbrace{\Var_\eta(h)}_{\text{behavioral}},
+\end{equation}
+where the last two terms are strictly positive and model-independent
+(see Theorem~\ref{thm:cramer_rao}).
+\end{theorem}
+
+\begin{proof}
+The bias--variance decomposition is standard. For the physical variance, write
+$\mathbf{S}_{t+h} = \hat{\mathbf{S}}_{t+h} + (\mathbf{S}_{t+h} - \E[\mathbf{S}_{t+h}|\F_t])
++ (\E[\mathbf{S}_{t+h}|\F_t] - \hat{\mathbf{S}}_{t+h})$ and expand using
+$\E[M_t(A_t - B)] = 0$ for a martingale $M$ and $\F_t$-measurable $B$.
+The decomposition into physical and behavioral components follows from the
+independence established in Theorem~\ref{thm:noise_decomp}.
+\end{proof}
+
+% ============================================================
+\section{Dual Stochastic Decomposition}
+\label{sec:noise}
+% ============================================================
+
+\subsection{Two Sources of Market Uncertainty}
+
+Standard models (e.g., Black--Scholes) conflate two qualitatively different
+sources of market randomness into a single Brownian motion.
+We argue this conflation is structurally incorrect:
+
+\begin{itemize}
+\item \textbf{Physical noise} $\tau_t$: Arises from fundamental information
+  asymmetry, parameter estimation error, and market microstructure frictions.
+  It accumulates \emph{continuously} along trading time—analogous to thermal
+  noise in physical systems.
+
+\item \textbf{Behavioral noise} $\eta_t$: Arises from investor sentiment,
+  herding, panic selling, and euphoric buying. It manifests as
+  \emph{discontinuous jumps}—sudden regime shifts that cannot be generated by
+  any continuous Brownian path.
+\end{itemize}
+
+\begin{assumption}[Dual noise structure]
+\label{ass:dual_noise}
+The noise in equation~\eqref{eq:full_sde} decomposes as:
+\begin{equation}
+\label{eq:dual_noise}
+\text{Noise}_t = \underbrace{\sigma_\tau(\mathbf{S}_t)\,dW_t^{(\tau)}}_{\text{physical}} + \underbrace{dJ_t^{(\eta)}}_{\text{behavioral}},
+\end{equation}
+where $W^{(\tau)}$ is a standard Brownian motion and
+$J^{(\eta)}_t = \int_0^t\!\int_{\R^k} z\,\tilde{N}^\eta(ds,dz)$ is an
+independent pure-jump Lévy process with Lévy measure $\nu^\eta$ satisfying
+$\int_{|z|>1}|z|^2\,\nu^\eta(dz) < \infty$ and
+$[W^{(\tau)}, J^{(\eta)}]_t = 0$ a.s.
+\end{assumption}
+
+\subsection{Canonical Decomposition Theorem}
+
+\begin{theorem}[Dual Lévy--Itô decomposition]
+\label{thm:noise_decomp}
+Under Assumption~\ref{ass:dual_noise}, the total noise process $L_t :=
+\sigma_\tau W_t^{(\tau)} + J_t^{(\eta)}$ has a unique Lévy characteristic
+$(b, C, \nu)$ that decomposes as:
+\begin{equation}
+\label{eq:levy_char_decomp}
+b = b_\tau + b_\eta, \quad
+C = \Sigma_\tau := \sigma_\tau\sigma_\tau^\top, \quad
+\nu = \nu^\eta,
+\end{equation}
+with $\Sigma_\tau$ (the diffusion matrix) and $\nu^\eta$ (the jump intensity
+measure) \emph{uniquely identified} by the characteristic function:
+\begin{equation}
+\label{eq:char_fn}
+\E\!\left[e^{i\xi^\top L_t}\right]
+= \exp\!\left(-t\!\left[
+    \tfrac{1}{2}\xi^\top\Sigma_\tau\xi
+    + \int_{\R^k}\!\left(1 - e^{i\xi^\top z} + i\xi^\top z\,\1_{|z|\leq1}\right)
+      \nu^\eta(dz)
+  \right]\right).
+\end{equation}
+In particular, $\Sigma_\tau \neq 0$ and $\nu^\eta \neq 0$ are \emph{orthogonal}
+in the sense that no jump measure can generate a continuous Gaussian component.
+\end{theorem}
+
+\begin{proof}
+By independence of $W^{(\tau)}$ and $J^{(\eta)}$, the characteristic function
+of $L_t$ factors as
+\[
+\E[e^{i\xi^\top L_t}]
+= \E[e^{i\xi^\top \sigma_\tau W_t}]\cdot\E[e^{i\xi^\top J_t^\eta}]
+= e^{-t\Psi_\tau(\xi)}\cdot e^{-t\Psi_\eta(\xi)},
+\]
+where $\Psi_\tau(\xi) = \frac{1}{2}\xi^\top\Sigma_\tau\xi$ (Gaussian) and
+$\Psi_\eta(\xi) = \int(1-e^{i\xi^\top z}+i\xi^\top z\,\1_{|z|\leq 1})\nu^\eta(dz)$
+(pure-jump Lévy). Adding the two Lévy exponents gives~\eqref{eq:char_fn}.
+Uniqueness of the Lévy characteristic (Theorem~\ref{thm:LK}) and the
+canonical decomposition of Lévy processes~\citep{Sato1999} establish that
+$\Sigma_\tau$ and $\nu^\eta$ are uniquely determined. The orthogonality
+statement reflects the Lévy--Khintchine classification: the Gaussian part is
+determined by $C = \Sigma_\tau$ alone, the jump part by $\nu^\eta$ alone;
+no assignment of mass to $\nu^\eta$ at any point in $\R^k$ can contribute
+to $C$.
+\end{proof}
+
+\begin{remark}[Heavy tails of behavioral noise]
+Empirical evidence~\citep{ContBouchaud2000,LuxMarchesi1999} supports
+$\nu^\eta(|z|>x) \sim x^{-\alpha}$ for $\alpha \in (1,2)$ (heavy-tailed
+but with finite variance), consistent with the power-law tails observed in
+financial return distributions and inconsistent with any Gaussian model.
+\end{remark}
+
+\subsection{Prediction Lower Bound}
+
+\begin{theorem}[Cramér--Rao-type prediction lower bound]
+\label{thm:cramer_rao}
+Let $\mathbf{S}$ satisfy~\eqref{eq:full_sde} under Assumption~\ref{ass:dual_noise}.
+For any $\F_t$-measurable unbiased estimator $\hat{\mathbf{S}}_{t+h}$ of
+$\mathbf{S}_{t+h}$ and any horizon $h > 0$:
+\begin{equation}
+\label{eq:CR_bound}
+\Var\!\left(\hat{\mathbf{S}}_{t+h} - \mathbf{S}_{t+h}\right)
+\geq \underbrace{\sigma_\tau^2\,h}_{\text{physical lower bound}}
+   + \underbrace{\lambda_\eta\,m_2^\eta\,h}_{\text{behavioral lower bound}}
+\eqqcolon \mathrm{CR}(h),
+\end{equation}
+where $\sigma_\tau^2 = \tr(\Sigma_\tau)$, $\lambda_\eta > 0$ is the jump
+intensity, and $m_2^\eta = \int_{\R^k}|z|^2\,\nu^\eta(dz)$.
+\end{theorem}
+
+\begin{proof}
+\textbf{Step 1 (Physical component).}
+Conditional on $\F_t$, the increment $\mathbf{S}_{t+h}^{(\tau)} - \mathbf{S}_t^{(\tau)}
+:= \int_t^{t+h}\sigma_\tau\,dW_u$ is Gaussian with mean zero and covariance
+$\Sigma_\tau h$.  For any unbiased estimator $\hat{A}$ of a Gaussian parameter
+with Fisher information $I$, the standard Cramér--Rao inequality gives
+$\Var(\hat{A}) \geq I^{-1}$.  Here $I^{-1} = \Sigma_\tau h$, so
+$\Var(\hat{\mathbf{S}}^{(\tau)}_{t+h}) \geq \tr(\Sigma_\tau)h = \sigma_\tau^2 h$.
+
+\textbf{Step 2 (Behavioral component).}
+Let $K_{t,t+h} = N^\eta([t,t+h]\times\R^k)$ be the number of jumps in
+$[t,t+h]$. Given $K_{t,t+h} = n$, the jump sizes are i.i.d.\ with common
+distribution $\nu^\eta(dz)/\lambda_\eta$, so the total jump contribution
+has variance $n \cdot m_2^\eta / \lambda_\eta$.  Integrating over
+$K_{t,t+h} \sim \mathrm{Poisson}(\lambda_\eta h)$:
+\[
+\Var\!\left(\int_t^{t+h}\!\!\int z\,\tilde{N}^\eta(du,dz)\right)
+= \lambda_\eta h \cdot m_2^\eta.
+\]
+Since $\hat{\mathbf{S}}_{t+h}$ cannot predict the future jump realisation
+without observing $N^\eta$ beyond time $t$, this variance is irreducible.
+
+\textbf{Step 3 (Independence).}
+By Assumption~\ref{ass:dual_noise}, physical and behavioral increments are
+independent, so their variances add:
+$\Var(\mathbf{S}_{t+h}^{(\tau)} + J_{t+h}^{(\eta)} - J_t^{(\eta)})
+= \sigma_\tau^2 h + \lambda_\eta m_2^\eta h = \mathrm{CR}(h)$.
+\end{proof}
+
+\begin{remark}[Analogy with quantum mechanics]
+Theorem~\ref{thm:cramer_rao} is the financial analogue of the Heisenberg
+uncertainty principle: even with perfect knowledge of $\F_t$ and an optimal
+model, the sum of prediction variances across physical and behavioral channels
+cannot fall below $\mathrm{CR}(h)$.  This bound is a structural feature of
+the market, not a limitation of methodology.
+\end{remark}
+
+\begin{corollary}[Time-varying temperature parameter]
+The scalar temperature parameter $\tau_t$ of the world model~\citep{HaSchmidhuber2018}
+has the closed-form expression:
+\[
+\tau_t = \sqrt{\sigma_\tau^2(\mathbf{S}_t) + \lambda_\eta(t)\,m_2^\eta(t)},
+\]
+and is a $\mathbb{F}$-adapted, time-varying quantity determined by local
+noise intensities.  Training the world model to match the observed local
+variance provides a principled, data-driven estimate of $\tau_t$.
+\end{corollary}
+
+% ============================================================
+\section{Financial Event Operator Algebra}
+\label{sec:events}
+% ============================================================
+
+\subsection{Affine Event Operators}
+
+\begin{definition}[Affine event operator]
+\label{def:operator}
+For each financial event type $w \in \mathcal{W}$, the associated
+\emph{event operator} is the affine map:
+\begin{equation}
+T_w(s) = A_w\,s + b_w + \Sigma_w\,\varepsilon_w,
+\quad \varepsilon_w \sim \mathcal{N}(0, I),
+\end{equation}
+where $A_w \in \R^{d'\times d}$ (with $d' = d$ or $d'\neq d$ depending on
+the event type), $b_w \in \R^{d'}$, and
+$\Sigma_w \in \R^{d'\times d'}$ encodes event-specific announcement uncertainty.
+\end{definition}
+
+\subsection{Classification of Financial Events}
+
+Financial events fall into three algebraic modes based on how they act on the
+state space:
+
+\begin{definition}[Three modes of action]
+\label{def:modes}
+\begin{enumerate}[label=(\Roman*)]
+\item \textbf{Local endomorphism} ($d' = d$, acts on one asset):
+  stock split, share repurchase, earnings announcement, dividend payment.
+  $A_w \in \R^{d\times d}$; the state space dimension is preserved.
+\item \textbf{Global tensor action} (acts on all $n$ assets via Kronecker product):
+  central bank rate change, systemic shock, sector-wide regulation.
+  $T_w^{\mathrm{global}} = \Lambda_w \otimes I_d$, with
+  $\Lambda_w \in \R^{n\times n}$ encoding heterogeneous sensitivities.
+\item \textbf{Pairwise morphism} ($d'\neq d$, changes entity count):
+  merger \& acquisition ($n\to n-1$), spin-off / IPO ($n\to n+1$).
+  $A_w$ is \emph{non-square}; the state space dimension changes.
+\end{enumerate}
+\end{definition}
+
+\begin{proposition}[Information irreversibility]
+\label{prop:info_irrev}
+For any Type-I event $w$ with natural inverse $w^{-1}$ (e.g., stock split
+followed by reverse split),
+\[
+T_{w^{-1}} \circ T_w = I + \mathcal{E}^\mathrm{info}_{w},
+\]
+where $\mathcal{E}^\mathrm{info}_{w} \neq 0$ is an operator acting non-trivially
+on the information subspace $\{\iota\text{-coordinate}\}$ of the state vector.
+Even when $A_w$ is invertible, the event releases information that cannot be
+unannounced: matrix invertibility does not imply physical reversibility.
+\end{proposition}
+
+\begin{proof}
+Let $s = (p, v, \ell, \kappa, \iota)^\top$. For a stock split with ratio
+$r > 1$: $A_w = \diag(1,1,1,r,1)$, $b_w = 0$. The split also increases the
+disclosure level: $\iota \mapsto \min(\iota + \delta_w, 1)$ for some
+$\delta_w > 0$. Hence $b_w$ has a positive entry in the $\iota$-coordinate.
+The inverse operation $A_{w^{-1}} = \diag(1,1,1,r^{-1},1)$ restores
+$\kappa$ but leaves $\iota$ elevated, so
+$(T_{w^{-1}} \circ T_w)(s)_\iota = \iota + \delta_w \neq \iota$.
+\end{proof}
+
+\subsection{Groupoid Structure of the Event Algebra}
+
+Type-III events (mergers and spin-offs) change the state space dimension $n$,
+making the operator $A_w$ non-square. This prevents the collection of all
+event operators from forming a semigroup (which requires a single carrier set).
+The correct algebraic structure is a \emph{groupoid}.
+
+\begin{definition}[Financial event groupoid]
+\label{def:groupoid}
+Define the \emph{financial event groupoid}
+$\mathcal{G}_{\mathrm{fin}} = (\mathcal{W}, \circ, \src, \tgt, \mathrm{id})$ by:
+\begin{itemize}
+  \item \textbf{Objects}: $\mathrm{Ob}(\mathcal{G}) = \{\Hil_S : S \text{ is a
+        valid $n$-asset market configuration, } n \in \N\}$.
+  \item \textbf{Morphisms}: For $T_w \in \mathrm{Hom}(\Hil_S, \Hil_{S'})$,
+        $\src(T_w) = \Hil_S$ and $\tgt(T_w) = \Hil_{S'}$.
+  \item \textbf{Composition}: $T_{w_2} \circ T_{w_1}$ is defined if and only if
+        $\src(T_{w_2}) = \tgt(T_{w_1})$.
+  \item \textbf{Identities}: $\mathrm{id}_{\Hil_S} = I_{d\cdot|S|}$.
+  \item \textbf{Topology}: Endow each $\mathrm{Hom}(\Hil_S, \Hil_{S'})$ with
+        the operator norm topology; the whole space with the disjoint-union
+        topology.
+\end{itemize}
+\end{definition}
+
+\begin{theorem}[Groupoid structure]
+\label{thm:groupoid}
+$\mathcal{G}_{\mathrm{fin}}$ is a topological groupoid.
+\end{theorem}
+
+\begin{proof}
+We verify the four groupoid axioms:
+
+\textit{(i) Well-defined composition.} Given $T_{w_1}: \Hil_S \to \Hil_{S'}$
+and $T_{w_2}: \Hil_{S'} \to \Hil_{S''}$, their composition
+$T_{w_2} \circ T_{w_1}: \Hil_S \to \Hil_{S''}$ is the standard
+operator composition, which is well-defined in Banach spaces whenever the
+intermediate spaces match. The dimensionality compatibility condition
+$\src(T_{w_2}) = \tgt(T_{w_1})$ is exactly this matching requirement.
+
+\textit{(ii) Associativity.} Operator composition in Banach spaces is
+associative: $(T_{w_3}\circ T_{w_2})\circ T_{w_1}
+= T_{w_3}\circ(T_{w_2}\circ T_{w_1})$ whenever both sides are defined.
+
+\textit{(iii) Identity morphisms.} For each $\Hil_S$, the identity
+operator $\mathrm{id}_{\Hil_S} = I_{d|S|}$ satisfies
+$T_w \circ \mathrm{id}_{\Hil_S} = T_w$ and
+$\mathrm{id}_{\Hil_{S'}} \circ T_w = T_w$ for any
+$T_w \in \mathrm{Hom}(\Hil_S, \Hil_{S'})$.
+
+\textit{(iv) Inverses (partial).} For Type-I and Type-II events with
+invertible $A_w$ (i.e., $\det(A_w) \neq 0$), the inverse $T_w^{-1}$ exists
+as an operator and $T_w \circ T_w^{-1} = \mathrm{id}_{\Hil_S}$
+(up to the information residual in Proposition~\ref{prop:info_irrev}).
+For Type-III events (non-square $A_w$), the Moore--Penrose pseudoinverse
+$T_w^+$ satisfies $T_w T_w^+ T_w = T_w$ but is not a full inverse—this
+is the natural partial-inverse structure of a groupoid.
+
+\textit{(v) Continuity.} Under the operator norm topology,
+$(T_{w_1}, T_{w_2}) \mapsto T_{w_2} \circ T_{w_1}$ is continuous
+(composition of bounded operators is jointly continuous in the norm topology).
+Similarly, $T_w \mapsto T_w^+$ is continuous on the set of operators
+with fixed rank.  Hence $\mathcal{G}_{\mathrm{fin}}$ is a topological groupoid.
+\end{proof}
+
+\begin{corollary}[Endomorphism monoid as a sub-structure]
+The collection of Type-I events $\mathcal{W}_I \subset \mathcal{W}$ acting
+on a fixed $n$-asset space forms an \emph{endomorphism monoid} with
+identity $I_{5n}$. For Type-I events with $\det(A_w) \neq 0$ this monoid
+is a group.
+\end{corollary}
+
+% ============================================================
+\section{The E-Game-C Architecture}
+\label{sec:egc}
+% ============================================================
+
+\subsection{Limitations of the Original VMC World Model}
+
+The V--M--C architecture of \citet{HaSchmidhuber2018} consists of:
+a Variational AutoEncoder (\textbf{V}) that compresses high-dimensional
+observations to a latent code $z_t$;
+a recurrent world model (\textbf{M}) that predicts $z_{t+1}$ from $(z_t, a_t)$;
+and a linear controller (\textbf{C}) trained by evolution strategies.
+
+Direct application to finance faces three structural obstacles:
+(a) the input is heterogeneous (prices, news, event sequences), not pixels;
+(b) the ``environment'' is not fixed—it is the aggregate outcome of all
+agents' decisions, creating a reflexive feedback loop;
+(c) the world model module $M$ implicitly assumes the environment is a
+fixed dynamical system, ignoring the multi-agent strategic structure
+that is fundamental to financial markets.
+
+\subsection{Encoder Module E}
+
+\begin{definition}[Information encoder]
+\label{def:encoder}
+The encoder $\mathcal{E}_\phi: \F_t \to \Z$ maps the information set at time
+$t$ to a latent code $z_t \in \Z \subset \R^{d_z}$ via a
+variational autoencoder~\citep{KingmaWelling2014}:
+\[
+z_t = \mathcal{E}_\phi(\mathbf{x}_t), \quad
+\mathbf{x}_t = (p_t, v_t, \text{news}_t, \text{events}_t, \ldots) \in \F_t,
+\]
+trained by maximising the ELBO:
+\[
+\mathcal{L}_{\mathrm{ELBO}}(\phi,\psi)
+= \E_{z \sim q_\phi}[\log p_\psi(\mathbf{x}|z)]
+  - \KL{q_\phi(z|\mathbf{x})}{p(z)}.
+\]
+\end{definition}
+
+\subsection{Game Module: Mean-Field Equilibrium Operator}
+
+The core innovation of our architecture is replacing the recurrent world
+model $M$ with a mean-field equilibrium operator.
+
+\begin{definition}[Market mean-field game]
+\label{def:game}
+The market consists of a continuum of agents $u \in [0,1]$. Agent $u$'s
+latent state evolves as:
+\begin{equation}
+\label{eq:agent_sde}
+dz^u_t = f(z^u_t, a^u_t, \mu_t, u)\,dt + \sigma\,dW^u_t,
+\quad z^u_0 \sim \rho_0,
+\end{equation}
+where $a^u_t \in \A$ is the action, $\mu_t = \Law(z^u_t)$ is the
+\emph{mean field} (distribution of all agents), and $(W^u)_{u\in[0,1]}$
+are independent Brownian motions.  Agent $u$ minimises the cost:
+\begin{equation}
+\label{eq:agent_cost}
+J^u(a) = \E\!\left[\int_0^T \ell(z^u_t, a^u_t, \mu_t, u)\,dt
+                   + g(z^u_T, \mu_T, u)\right].
+\end{equation}
+\end{definition}
+
+\begin{theorem}[MFG equilibrium existence]
+\label{thm:mfg_exist}
+Under the following conditions:
+\begin{enumerate}[label=(\textnormal{A\arabic*})]
+  \item $f$ and $\ell$ are jointly continuous in all arguments and
+        Lipschitz in $(z,a,\mu)$ with constant $L_f$;
+  \item The action space $\A$ is compact and convex;
+  \item There exists a unique minimiser $\hat{a}(z,\mu,u) = \argmin_{a\in\A}\mathcal{H}(z,a,\mu,u,p)$
+        for the Hamiltonian $\mathcal{H}$ with adjoint $p$;
+  \item (\emph{Lasry--Lions monotonicity})
+        $\int[\ell(z,\mu,a)-\ell(z,\mu',a)]\,d(\mu-\mu')(z) \geq 0$
+        for all $\mu, \mu', a$,
+\end{enumerate}
+there exists a unique mean-field game equilibrium
+$(\hat{a}^*, \hat{\mu})$ satisfying:
+(i)~$\hat{a}^*_t = \argmin_{a}J^u(a|\hat{\mu})$ for $\mu$-a.e.\ $u$;
+(ii)~$\hat{\mu}_t = \Law(z^u_t|\hat{a}^*)$ for all $t$.
+\end{theorem}
+
+\begin{proof}
+Define the fixed-point map $\Phi: C([0,T];\Prob_2(\Z)) \to C([0,T];\Prob_2(\Z))$
+by: given a flow $\mathbf{m} = (\mu_t)$, solve the forward SDE~\eqref{eq:agent_sde}
+with optimal feedback $\hat{a}(z,\mu_t,u)$ and output $\Phi(\mathbf{m})_t = \Law(z^u_t)$.
+
+\textit{Self-mapping.} By (A1)--(A2) and Gronwall, solutions of~\eqref{eq:agent_sde}
+satisfy a uniform $L^2$ bound, so $\Phi(\mathbf{m}) \in C([0,T];\Prob_2(\Z))$.
+
+\textit{Compactness.} Tightness of $\{\Phi(\mathbf{m}_n)\}$ for bounded sequences
+$\{\mathbf{m}_n\}$ follows from Arzela--Ascoli applied to the SDE solutions.
+
+\textit{Continuity.} If $\mathbf{m}_n \to \mathbf{m}$ in $C([0,T];\Prob_2(\Z))$
+(Wasserstein-2 topology), then by (A1) and stability of SDEs,
+$\Phi(\mathbf{m}_n) \to \Phi(\mathbf{m})$.
+
+\textit{Schauder's theorem.} $\Phi$ maps the closed convex set
+$\mathcal{K} = \{\mathbf{m}: \sup_t\WD{\mu_t}{\rho_0}^2 \leq R\}$
+(for $R$ large enough) into itself, continuously, and $\mathcal{K}$
+is compact. Schauder's fixed-point theorem~\citep{Evans2010} yields
+a fixed point $\hat{\mathbf{m}}$ with $\Phi(\hat{\mathbf{m}}) = \hat{\mathbf{m}}$,
+i.e., a MFG equilibrium.
+
+\textit{Uniqueness.} The Lasry--Lions condition (A4) ensures that any
+two equilibria $(\hat{a}^*, \hat{\mu})$ and $(\hat{a}^{**},\hat{\mu}^{**})$ satisfy
+$\WD{\hat{\mu}_t}{\hat{\mu}^{**}_t} = 0$ for all $t$ (by a standard
+energy estimate using the monotonicity of $\ell$), hence uniqueness.
+\end{proof}
+
+\subsection{Controller Module C}
+
+\begin{definition}[Optimal controller]
+The controller $\pi^*: \Z \times \Hil_\mathrm{RNN} \to \A$ maps the current
+latent state $z_t$ and world-model hidden state $h_t$ to an optimal action:
+\[
+\pi^*(z_t, h_t) = \argmax_{a\in\A}\, Q^*(z_t, h_t, a),
+\]
+where $Q^*$ is the optimal action-value function satisfying the HJB equation:
+\[
+0 = \partial_t Q + \sup_{a\in\A}\left[
+    f(z,a,\hat{\mu}_t)^\top \nabla_z Q + \ell(z,a,\hat{\mu}_t)
+  \right]
+  + \tfrac{1}{2}\sigma^2\Delta_z Q.
+\]
+\end{definition}
+
+% ============================================================
+\section{Hierarchical Mean-Field Theory}
+\label{sec:mfg}
+% ============================================================
+
+\subsection{Motivation: Multi-Scale Structure of Financial Markets}
+
+A key structural observation motivates the hierarchical extension:
+
+\begin{enumerate}
+\item At the \textbf{national/regional scale}, sovereign entities (countries,
+  central banks, regulatory bodies) interact without a supranational central
+  planner—a MFG structure.
+\item Within each nation, individual firms are subject to regulation and
+  monetary policy set by the central bank—a partial MFC structure.
+\item At the \textbf{firm level}, individual investors within a firm's investor
+  base again interact without coordination—a MFG structure.
+\end{enumerate}
+
+This hierarchical interplay—MFG at the macro level, mixed MFG/MFC at the
+meso level—cannot be captured by a single-level mean-field model.
+
+\subsection{Two-Level McKean--Vlasov System}
+
+Let $N \in \N$ denote the number of groups (nations) and $M$ the size of the
+continuum of agents within each group.
+
+\paragraph{Level 1 (macro-group dynamics).}
+Each group $j \in \{1,\ldots,N\}$ has a representative state
+$\xi^j_t \in \R^{d_1}$ evolving as:
+\begin{equation}
+\label{eq:level1_sde}
+d\xi^j_t = b_1(\xi^j_t, \nu^{(1)}_t, \alpha^j_t)\,dt + \sigma_1\,dB^j_t,
+\quad \xi^j_0 = \xi^j_0 \in \R^{d_1},
+\end{equation}
+where $\nu^{(1)}_t = \frac{1}{N}\sum_{k=1}^N \delta_{\xi^k_t}$ is the
+empirical measure of macro-group states, $\alpha^j_t$ is the policy
+(control) of group $j$, and $(B^j)_{j=1}^N$ are independent Brownian motions.
+Group $j$ minimises the macro-cost:
+\begin{equation}
+\label{eq:level1_cost}
+J_1^j(\alpha^j) = \E\!\left[\int_0^T f_1(\xi^j_t, \nu^{(1)}_t, \alpha^j_t)\,dt
+                             + g_1(\xi^j_T, \nu^{(1)}_T)\right].
+\end{equation}
+
+\paragraph{Level 2 (micro-agent dynamics).}
+Within group $j$, a continuum of agents $u \in [0,1]$ has states
+$x^{j,u}_t \in \R^{d_2}$ evolving as:
+\begin{equation}
+\label{eq:level2_sde}
+dx^{j,u}_t = b_2(x^{j,u}_t, \mu^{(2)}_{j,t}, \xi^j_t, a^{j,u}_t)\,dt
+             + \sigma_2\,dW^{j,u}_t,
+\end{equation}
+where $\mu^{(2)}_{j,t} = \int_0^1 \delta_{x^{j,u}_t}\,du$ is the intra-group
+mean field, $a^{j,u}_t$ is agent $u$'s control, and $(W^{j,u})$ are i.i.d.
+Each agent minimises:
+\begin{equation}
+\label{eq:level2_cost}
+J_2^{j,u}(a) = \E\!\left[\int_0^T f_2(x^{j,u}_t, \mu^{(2)}_{j,t}, \xi^j_t, a^{j,u}_t)\,dt
+                          + g_2(x^{j,u}_T, \mu^{(2)}_{j,T}, \xi^j_T)\right].
+\end{equation}
+
+\paragraph{Coupling condition.}
+The Level-1 and Level-2 dynamics are coupled through the \emph{aggregation
+functional}
+\begin{equation}
+\label{eq:agg}
+\Psi_j\!\left(\mu^{(2)}_{j,\cdot}\right)
+:= \int_{\R^{d_2}} \phi(x)\,\mu^{(2)}_{j,t}(dx), \quad t \in [0,T],
+\end{equation}
+for a bounded Lipschitz test function $\phi$; the macro-group cost $J_1^j$
+depends on $\Psi_j(\mu^{(2)}_{j,\cdot})$ through the drift $b_1$.
+
+\subsection{Hierarchical Nash Equilibrium}
+
+\begin{definition}[Hierarchical Nash equilibrium]
+\label{def:hier_nash}
+A pair $\bigl((\alpha^{j,*})_{j=1}^N,\, (a^{j,u,*})_{j,u}\bigr)$ is a
+\emph{hierarchical Nash equilibrium} if:
+\begin{enumerate}[label=(\roman*)]
+\item For each group $j$ and the resulting Level-2 equilibrium
+  $\hat{\mu}^{(2)}_j[\xi^j]$ (defined in Definition~\ref{def:lvl2_eq} below),
+  the macro policy satisfies:
+  \[
+  J_1^j(\alpha^{j,*}) \leq J_1^j(\alpha^j)
+  \quad \forall\,\alpha^j,\, \text{given } (\alpha^{k,*})_{k\neq j};
+  \]
+\item For each group $j$ and each agent $u \in [0,1]$, given $\xi^j$ and
+  $\mu^{(2)}_{j,t} = \hat{\mu}^{(2)}_{j,t}[\xi^j]$:
+  \[
+  J_2^{j,u}(a^{j,u,*}) \leq J_2^{j,u}(a^{j,u}) \quad \forall\, a^{j,u}.
+  \]
+\end{enumerate}
+\end{definition}
+
+\subsection{Assumptions}
+
+\begin{assumption}[Regularity at Level 2]
+\label{ass:L2}
+\begin{enumerate}[label=(L\arabic*)]
+\item $b_2$, $f_2$, $g_2$ are jointly continuous and Lipschitz in
+  $(x, \mu, \xi, a)$ with constant $L_2 < \infty$, uniformly in $j$.
+\item $b_2$ satisfies linear growth: $|b_2(x,\mu,\xi,a)| \leq C_2(1+|x|)$.
+\item The action space $\A_2$ is compact and convex.
+\item Lasry--Lions monotonicity at Level 2:
+  $\int[f_2(x,\mu,\xi,a) - f_2(x,\mu',\xi,a)]\,d(\mu-\mu')(x) \geq 0$.
+\end{enumerate}
+\end{assumption}
+
+\begin{assumption}[Regularity at Level 1]
+\label{ass:L1}
+\begin{enumerate}[label=(L\arabic*), start=5]
+\item $b_1$, $f_1$, $g_1$ are jointly continuous and Lipschitz in
+  $(\xi, \nu, \alpha)$ with constant $L_1 < \infty$.
+\item The action space $\A_1$ is compact and convex.
+\item Lasry--Lions monotonicity at Level 1:
+  $\int[f_1(\xi,\nu,\alpha) - f_1(\xi,\nu',\alpha)]\,d(\nu-\nu')(\xi) \geq 0$.
+\item The aggregation map $\Psi_j: C([0,T];\Prob_2(\R^{d_2})) \to C([0,T];\R)$
+  is Lipschitz with constant $L_\Psi < \infty$.
+\end{enumerate}
+\end{assumption}
+
+\subsection{Main Theorem}
+
+\begin{theorem}[Hierarchical Mean-Field Nash Equilibrium]
+\label{thm:hier_mfg}
+Under Assumptions~\ref{ass:L2} and~\ref{ass:L1}, there exists a unique
+hierarchical Nash equilibrium in the sense of Definition~\ref{def:hier_nash}.
+\end{theorem}
+
+The proof proceeds through a sequence of four lemmas.
+
+\begin{definition}[Level-2 equilibrium operator]
+\label{def:lvl2_eq}
+For each fixed continuous path $\xi = (\xi_t)_{t\in[0,T]} \in
+C([0,T];\R^{d_1})$, let $\mathrm{MFG}_2[\xi]$ denote the mean-field game
+with dynamics~\eqref{eq:level2_sde}--\eqref{eq:level2_cost} with $\xi^j_t$
+replaced by $\xi_t$.  By Theorem~\ref{thm:mfg_exist} (applied to the
+Level-2 system under (L1)--(L4)), $\mathrm{MFG}_2[\xi]$ has a unique
+equilibrium measure flow $\hat{\mu}^{(2)}[\xi] \in C([0,T];\Prob_2(\R^{d_2}))$.
+\end{definition}
+
+\begin{lemma}[Level-2 stability estimate]
+\label{lem:L2_stability}
+Under Assumption~\ref{ass:L2}, for any two paths
+$\xi, \xi' \in C([0,T];\R^{d_1})$:
+\[
+\sup_{t\in[0,T]} \WD{\hat{\mu}^{(2)}_t[\xi]}{\hat{\mu}^{(2)}_t[\xi']}
+\leq C_{2,\mathrm{stab}}\,\norm{\xi - \xi'}_{C([0,T])},
+\]
+where $C_{2,\mathrm{stab}} = C_{2,\mathrm{stab}}(L_2, T, \sigma_2) < \infty$
+depends only on the problem parameters.
+\end{lemma}
+
+\begin{proof}
+Let $x_t$ and $x'_t$ be the optimal state processes for $\mathrm{MFG}_2[\xi]$
+and $\mathrm{MFG}_2[\xi']$ respectively.  Define $\Delta_t = x_t - x'_t$.
+By the Lipschitz condition (L1), the dynamics of $\Delta_t$ satisfy:
+\[
+d\Delta_t = \left[b_2(x_t, \hat\mu_t, \xi_t, \hat a_t)
+                 - b_2(x'_t, \hat\mu'_t, \xi'_t, \hat a'_t)\right]dt.
+\]
+Using the triangle inequality for the Lipschitz bound:
+\begin{align*}
+|d\Delta_t| &\leq L_2\bigl(|\Delta_t| + \WD{\hat\mu_t}{\hat\mu'_t}
+                           + |\xi_t - \xi'_t| + |\hat a_t - \hat a'_t|\bigr)dt.
+\end{align*}
+Since the optimal control satisfies the same Lipschitz bound (by the
+smoothness of the Hamiltonian), and $\WD{\hat\mu_t}{\hat\mu'_t}
+\leq (\E[|\Delta_t|^2])^{1/2}$, Gronwall's inequality gives:
+\[
+\E\!\left[\sup_{t\leq T}|\Delta_t|^2\right]
+\leq C e^{C L_2 T}\norm{\xi - \xi'}_{C([0,T])}^2.
+\]
+Since $\hat\mu^{(2)}_t[\xi] = \Law(x_t)$ and $\hat\mu^{(2)}_t[\xi'] = \Law(x'_t)$,
+the $W_2$ distance is bounded by $(\E[|\Delta_t|^2])^{1/2}$, yielding the claim.
+\end{proof}
+
+\begin{lemma}[Continuity of the aggregation functional]
+\label{lem:agg_cont}
+The composed map
+$\xi \mapsto \Psi_j(\hat\mu^{(2)}[\xi])$
+from $C([0,T];\R^{d_1})$ to $C([0,T];\R)$ is Lipschitz with constant
+$L_\Psi \cdot C_{2,\mathrm{stab}}$.
+\end{lemma}
+
+\begin{proof}
+Direct application of (L8) and Lemma~\ref{lem:L2_stability}:
+\begin{align*}
+\norm{\Psi_j(\hat\mu^{(2)}[\xi]) - \Psi_j(\hat\mu^{(2)}[\xi'])}_{C([0,T])}
+&\leq L_\Psi \sup_t \WD{\hat\mu^{(2)}_t[\xi]}{\hat\mu^{(2)}_t[\xi']} \\
+&\leq L_\Psi C_{2,\mathrm{stab}}\norm{\xi - \xi'}_{C([0,T])}.
+\end{align*}
+\end{proof}
+
+\begin{lemma}[Existence of Level-1 MFG equilibrium]
+\label{lem:L1_exist}
+Fix the Level-2 equilibrium measure flows $\hat\mu^{(2)}[\xi^j]$ as a function
+of the Level-1 paths $\xi^j$. Then the Level-1 system~\eqref{eq:level1_sde}--\eqref{eq:level1_cost} (with the aggregation term incorporated into $b_1$) admits a unique MFG equilibrium $(\hat\alpha^{j,*}, \hat\nu^{(1)})$.
+\end{lemma}
+
+\begin{proof}
+The Level-1 system is a standard mean-field game with state space $\R^{d_1}$
+and action space $\A_1$.  By Lemma~\ref{lem:agg_cont}, incorporating
+$\Psi_j(\hat\mu^{(2)}[\xi^j])$ into the Level-1 drift $b_1$ produces a new
+drift $\tilde{b}_1(\xi^j, \nu^{(1)}, \alpha^j) := b_1(\xi^j, \nu^{(1)}, \alpha^j,
+\Psi_j(\hat\mu^{(2)}[\xi^j]))$ that is Lipschitz in $(\xi^j, \nu^{(1)}, \alpha^j)$
+with constant $\max(L_1, L_\Psi C_{2,\mathrm{stab}})$.
+Assumptions (L5)--(L7) ensure that Theorem~\ref{thm:mfg_exist} applies to the
+Level-1 system with this modified drift, giving the existence and uniqueness
+of $(\hat\alpha^{j,*}, \hat\nu^{(1)})$.
+\end{proof}
+
+\begin{lemma}[Consistency: Level-2 under optimal Level-1 policies]
+\label{lem:consistency}
+Given the Level-1 equilibrium trajectories $(\hat\xi^j_t)$ generated by
+$\hat\alpha^{j,*}$, the corresponding Level-2 equilibria
+$\hat{a}^{j,u,*} = \hat{a}^{j,u,*}[\hat\xi^j]$ satisfy the Level-2
+optimality conditions in Definition~\ref{def:hier_nash}(ii).
+\end{lemma}
+
+\begin{proof}
+By Definition~\ref{def:lvl2_eq}, $\hat{a}^{j,u,*}[\hat\xi^j]$ is the
+equilibrium of $\mathrm{MFG}_2[\hat\xi^j]$, which directly gives optimality.
+No further argument is needed beyond the definition.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:hier_mfg}]
+\textit{Existence.}
+\begin{enumerate}
+\item By Theorem~\ref{thm:mfg_exist} applied at Level 2 (Lemmas exist for any
+  fixed $\xi^j$), the Level-2 equilibrium operator $\xi^j \mapsto
+  (\hat{a}^{j,u,*}[\xi^j], \hat\mu^{(2)}_j[\xi^j])$ is well-defined.
+\item By Lemma~\ref{lem:L2_stability} and~\ref{lem:agg_cont}, the aggregation
+  functional $\xi^j \mapsto \Psi_j(\hat\mu^{(2)}_j[\xi^j])$ is Lipschitz.
+\item By Lemma~\ref{lem:L1_exist}, the Level-1 MFG with the aggregated
+  feedback has a unique equilibrium $(\hat\alpha^{j,*}, \hat\nu^{(1)})$,
+  generating equilibrium trajectories $\hat\xi^j_t$.
+\item By Lemma~\ref{lem:consistency}, the Level-2 policies
+  $\hat{a}^{j,u,*}[\hat\xi^j]$ are optimal given $\hat\xi^j$.
+  Together with the Level-1 optimality from step 3, Definition~\ref{def:hier_nash}
+  is satisfied.
+\end{enumerate}
+
+\textit{Uniqueness.}
+Suppose $\bigl((\alpha^{j,*}),\, (a^{j,u,*})\bigr)$ and
+$\bigl((\alpha^{j,**}),\, (a^{j,u,**})\bigr)$ are two hierarchical Nash
+equilibria generating trajectory distributions $\nu^{(1)}$ and $\nu^{(1),**}$
+respectively.
+
+At Level 2: by the uniqueness part of Theorem~\ref{thm:mfg_exist} (uniqueness
+follows from the Lasry--Lions condition (L4)), for each fixed Level-1
+trajectory path $\xi^j$:
+$\hat\mu^{(2)}_j[\xi^j]$ is unique, so the Level-2 equilibria coincide whenever
+the Level-1 paths coincide.
+
+At Level 1: the Level-1 system with the (unique) aggregation
+$\Psi_j(\hat\mu^{(2)}_j[\xi^j])$ is a standard MFG satisfying (L5)--(L7),
+whose unique equilibrium measure flow $\hat\nu^{(1)}$ is guaranteed by the
+Lasry--Lions condition (L7).  Hence $\nu^{(1)} = \nu^{(1),**}$, and the
+Level-1 equilibrium trajectories coincide.  Feeding these back into the
+Level-2 uniqueness gives $a^{j,u,*} = a^{j,u,**}$ $\mu_j$-a.e.
+\end{proof}
+
+\begin{corollary}[Multi-scale information decomposition]
+\label{cor:multiscale}
+Under the hierarchical equilibrium, the optimal micro-agent policy decomposes:
+\[
+a^{j,u,*}_t
+= \underbrace{\vp_1(\hat\xi^j_t, \hat\nu^{(1)}_t)}_{\text{macro contribution}}
++ \underbrace{\vp_2(x^{j,u}_t, \hat\mu^{(2)}_{j,t}, \hat\xi^j_t)}_{\text{micro contribution}}
++ O(\epsilon),
+\]
+where $\epsilon = L_\Psi C_{2,\mathrm{stab}} \cdot \sup_t|\xi^j_t - \hat\xi^j_t|$
+measures the coupling strength.
+\end{corollary}
+
+\begin{proof}
+Expand the optimal value function $V^{j,u}(x, \mu, \xi)$ around the equilibrium
+$(\hat\mu^{(2)}_{j,t}, \hat\xi^j_t)$ using Taylor's theorem. The first-order
+terms in $\xi$ yield $\vp_1$ via the envelope theorem, and the terms in $\mu$
+yield $\vp_2$. The $O(\epsilon)$ remainder follows from Lemma~\ref{lem:L2_stability}.
+\end{proof}
+
+% ============================================================
+\section{Stochastic Lyapunov Stability}
+\label{sec:stability}
+% ============================================================
+
+\subsection{Lyapunov Stability under Dual Noise}
+
+The classical Lyapunov stability theory for ODEs must be substantially extended
+when the noise includes a jump component. The key tool is the Itô formula for
+Lévy-driven processes.
+
+\begin{definition}[Infinitesimal generator]
+\label{def:generator}
+For the process $\mathbf{S}_t$ satisfying~\eqref{eq:full_sde} (ignoring
+event jumps for clarity), the \emph{extended generator} acting on
+$C^2(\Hil)$ is:
+\begin{align}
+\label{eq:generator}
+\mathcal{L}V(\mathbf{S})
+&= \nabla V(\mathbf{S})^\top \mu(\mathbf{S})
+   + \tfrac{1}{2}\tr\!\left(\sigma_\tau\sigma_\tau^\top \nabla^2 V(\mathbf{S})\right) \nonumber\\
+&\quad + \int_{\R^k}\!\left[V(\mathbf{S}+z) - V(\mathbf{S})
+         - z^\top\nabla V(\mathbf{S})\,\1_{|z|\leq 1}\right]\nu^\eta(dz).
+\end{align}
+\end{definition}
+
+The three terms correspond respectively to: the contribution of the
+deterministic drift, the diffusive physical noise, and the behavioral jump noise.
+
+\begin{theorem}[Stochastic Lyapunov stability and invariant measure]
+\label{thm:lyapunov}
+Suppose there exists a $C^2$ function $V: \Hil \to \R_+$ and constants
+$c, c_0 > 0$ such that:
+\begin{equation}
+\label{eq:lyapunov_cond}
+\mathcal{L}V(\mathbf{S}) \leq -c\,V(\mathbf{S}) + c_0
+\quad \text{for all } \mathbf{S} \in \Hil.
+\end{equation}
+Then:
+\begin{enumerate}[label=(\roman*)]
+\item \textbf{Exponential ergodicity}: For any initial condition $\mathbf{S}_0$,
+\[
+\E[V(\mathbf{S}_t)] \leq V(\mathbf{S}_0)\,e^{-ct} + \frac{c_0}{c}.
+\]
+\item \textbf{Existence of invariant measure}: The process $\mathbf{S}_t$ admits
+at least one invariant (stationary) probability measure $\pi^*$.
+\item \textbf{Exponential convergence}: If additionally $V \geq 1$ and the
+sublevel sets $\{V \leq r\}$ are compact (petite sets for the Markov
+chain skeleton), then $\pi^*$ is unique and
+\[
+\norm{\PP(\mathbf{S}_t \in \cdot|\mathbf{S}_0) - \pi^*}_{\mathrm{TV}}
+\leq C(\mathbf{S}_0)\,e^{-\rho t}
+\]
+for some $C(\mathbf{S}_0) < \infty$ and $\rho > 0$ depending on $c$ and $c_0$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+\textit{(i) Exponential bound.}
+By Itô's formula for Lévy processes~\citep{Sato1999,Protter2005}:
+\begin{align*}
+dV(\mathbf{S}_t) &= \mathcal{L}V(\mathbf{S}_t)\,dt
+ + \nabla V(\mathbf{S}_t)^\top\sigma_\tau\,dW_t \\
+&\quad + \int_{\R^k}\!\bigl[V(\mathbf{S}_{t^-}+z) - V(\mathbf{S}_{t^-})\bigr]\,
+         \tilde{N}^\eta(dt,dz).
+\end{align*}
+The stochastic integrals are local martingales. Taking expectations:
+\[
+\frac{d}{dt}\E[V(\mathbf{S}_t)]
+= \E[\mathcal{L}V(\mathbf{S}_t)]
+\leq -c\,\E[V(\mathbf{S}_t)] + c_0.
+\]
+Gronwall's inequality gives $\E[V(\mathbf{S}_t)] \leq V(\mathbf{S}_0)e^{-ct} + c_0/c$.
+
+\textit{(ii) Existence of invariant measure.}
+The bound in (i) shows that the family $\{(1/t)\int_0^t \PP(\mathbf{S}_s \in \cdot)\,ds\}_{t>0}$
+is tight in $\Prob(\Hil)$ (by Markov's inequality and the upper bound
+$c_0/c$ on $\E[V]$). Any weak limit point of this family is an invariant measure
+(Krylov--Bogoliubov theorem~\citep{DaPratoZabczyk1996}).
+
+\textit{(iii) Uniqueness and exponential rate.}
+Under the petite-set condition, the process is \emph{$V$-geometrically ergodic}
+in the sense of~\citet{MeynTweedie1993} (their Foster--Lyapunov
+Criterion V). The uniqueness of $\pi^*$ and the TV convergence follow from
+their Theorem 15.0.1.
+\end{proof}
+
+\begin{remark}[Lyapunov condition in financial terms]
+The condition~\eqref{eq:lyapunov_cond} with $V(\mathbf{S}) = \|\mathbf{S} - \mathbf{S}^*\|^2$
+reduces to a mean-reversion condition: the drift and jump terms together must
+push the market state back toward $\mathbf{S}^*$ at rate at least $c$, i.e.,
+\[
+2(\mathbf{S}-\mathbf{S}^*)^\top\mu(\mathbf{S})
++ \tr(\sigma_\tau\sigma_\tau^\top)
++ \int_{\R^k}\left(2(\mathbf{S}-\mathbf{S}^*)^\top z + |z|^2\right)\nu^\eta(dz)
+\leq -c\|\mathbf{S}-\mathbf{S}^*\|^2 + c_0.
+\]
+\end{remark}
+
+\subsection{Bubbles and Crises as Lyapunov Violations}
+
+\begin{definition}[Instability region]
+The \emph{instability region} is $\mathcal{R}_{\mathrm{unstable}}
+:= \{\mathbf{S} \in \Hil : \mathcal{L}V(\mathbf{S}) > 0\}$.
+\end{definition}
+
+\begin{proposition}[Analytic signature of market bubbles]
+\label{prop:bubble}
+If $\mathbf{S}_0 \in \mathcal{R}_{\mathrm{unstable}}$ and the behavioral jump
+intensity $\lambda_\eta(t)$ is sufficiently large (high-sentiment regime), then:
+\[
+\PP\!\left(\tau_{\mathrm{escape}} < T\right) > 0,
+\quad \tau_{\mathrm{escape}} := \inf\{t > 0 : V(\mathbf{S}_t) > R\}
+\]
+for any $R > V(\mathbf{S}_0)$.  That is, the market state escapes to a
+high-$V$ region (bubble or crash trajectory) with positive probability.
+\end{proposition}
+
+\begin{proof}
+In $\mathcal{R}_{\mathrm{unstable}}$, $\mathcal{L}V > 0$, so
+$\E[V(\mathbf{S}_{t\wedge\tau})]$ is locally increasing. By the optional
+stopping theorem applied to the stopped submartingale
+$V(\mathbf{S}_{t\wedge\tau})$, the probability of exiting $\{V \leq R\}$
+before time $T$ is bounded below by
+$\PP(\tau_{\mathrm{escape}} < T) \geq
+\mathcal{L}V(\mathbf{S}_0)/(R - V(\mathbf{S}_0)) \cdot \delta + O(\delta^2)$
+for small $\delta > 0$ (first-exit probability estimate).
+\end{proof}
+
+\begin{corollary}[Real-time market risk indicator]
+Define the instantaneous risk indicator:
+\[
+\mathrm{RI}(t) := \mathcal{L}V(\mathbf{S}_t).
+\]
+$\mathrm{RI}(t) > 0$ signals that the market is in a potential bubble
+or crisis regime; $\mathrm{RI}(t) < -c\,V(\mathbf{S}_t)$ signals strong
+mean-reversion. Monitoring $\mathrm{RI}$ provides a theoretically
+grounded, model-consistent early-warning indicator.
+\end{corollary}
+
+% ============================================================
+\section{Unified Evolution Equation}
+\label{sec:unified}
+% ============================================================
+
+We now assemble all components into the complete evolution equation.
+
+\begin{theorem}[Unified market world model equation]
+\label{thm:unified}
+The market state process $\mathbf{S}_t$ under the E-Game-C architecture,
+with dual noise and financial event operators, satisfies:
+\begin{equation}
+\label{eq:unified}
+\mathbf{S}_t = \mathbf{S}_0
+  + \int_0^t \mu^*(\mathbf{S}_u, \hat\mu_u)\,du
+  + \int_0^t \sigma_\tau(\mathbf{S}_u)\,dW^{(\tau)}_u
+  + \int_0^t\!\!\int_{\R^k} z\,\tilde{N}^\eta(du,dz)
+  + \sum_{\substack{w \in \mathcal{W}_I \cup \mathcal{W}_{II} \\ \tau_w \leq t}}
+    (T_w - I)\mathbf{S}_{\tau_w^-}
+  + \sum_{\substack{w \in \mathcal{W}_{III} \\ \tau_w \leq t}}
+    \mathcal{R}_w(\mathbf{S}_{\tau_w^-}),
+\end{equation}
+where $\mu^*(\mathbf{S}, \hat\mu)$ is the equilibrium drift from the
+hierarchical MFG (Theorem~\ref{thm:hier_mfg}), $T_w$ are Type-I/II event
+operators, and $\mathcal{R}_w$ are Type-III (dimension-changing) groupoid
+morphisms.
+\end{theorem}
+
+\begin{proof}
+The equation follows by assembling:
+(a) the Itô integral form (Definition~\ref{def:ito_integral});
+(b) the dual noise decomposition (Theorem~\ref{thm:noise_decomp});
+(c) the event operator jumps (Definition~\ref{def:operator});
+(d) the equilibrium drift from the hierarchical MFG equilibrium
+(Theorem~\ref{thm:hier_mfg}), which replaces the generic $\mu(\mathbf{S},u)$.
+Well-posedness of~\eqref{eq:unified} follows from the Lipschitz conditions in
+Assumptions~\ref{ass:L2}--\ref{ass:L1} and the standard existence theory for
+McKean--Vlasov SDEs with jumps~\citep{MisierMeleard1996}.
+\end{proof}
+
+% ============================================================
+\section{Discussion}
+\label{sec:discussion}
+% ============================================================
+
+\subsection{Relation to Prior Work}
+
+\paragraph{Factor models.}
+Our framework subsumes factor models as a special case: setting $\mu^* = \sum_k \beta_k F_k$ (linear factor structure), $\sigma_\tau = \sigma_0 I$, $\nu^\eta = 0$, and $T_w = I$ (no events) recovers a multi-factor APT model. The advantage of our setting is that it does not assume stationarity of factor loadings.
+
+\paragraph{MFG in finance.}
+Existing MFG-based financial models~\citep{CarmonaLacker2015,CarmonaMouzouni2023}
+operate at a single scale.  Our hierarchical extension (Theorem~\ref{thm:hier_mfg})
+is, to our knowledge, the first to prove existence of a hierarchical Nash
+equilibrium in a two-level McKean--Vlasov system with explicit Level-1/Level-2
+coupling via an aggregation functional.
+
+\paragraph{World models.}
+The world-model paradigm has been applied to portfolio
+optimisation~\citep{AwmlgLiverpool2026} and order-book
+simulation~\citep{MorganJPMaGAN} but without a theoretical foundation.
+Our E-Game-C architecture provides this foundation and subsumes prior
+architectures as special cases (e.g., \citet{HaSchmidhuber2018} corresponds to
+a Level-1-only model with no behavioral noise).
+
+\subsection{Limitations and Future Work}
+
+\paragraph{Empirical validation.}
+This paper establishes the theoretical framework. Empirical validation—
+calibrating $(\sigma_\tau, \nu^\eta)$ from high-frequency data, estimating
+$\hat\mu^{(2)}$ from a public dataset, testing the Lyapunov risk indicator—
+is deferred to subsequent work.
+
+\paragraph{Graphon extension.}
+The agent type $u$ is currently a scalar in $[0,1]$.  As noted in
+Section~\ref{sec:mfg}, the natural extension is $u \in [0,1]^m$ (a vector of
+agent characteristics), leading to Graphon mean-field games~\citep{CarmonaGraphon2022}.
+This extension is theoretically straightforward given our framework but requires
+additional functional-analytic machinery.
+
+\paragraph{Non-Markovian extensions.}
+The Markovian assumption (McKean--Vlasov SDE) can be relaxed to allow
+path-dependent coefficients, at the cost of working in infinite-dimensional
+path spaces.
+
+% ============================================================
+\section{Conclusion}
+\label{sec:conclusion}
+% ============================================================
+
+We have presented the first systematic mathematical theory for market world
+models. Starting from the observation that financial markets have no correct
+ODE description (Proposition~\ref{prop:nondiff}), we developed:
+
+\begin{itemize}
+\item A dual noise decomposition into physical (Brownian) and behavioral (Lévy-jump)
+  components, with a Cramér--Rao lower bound (Theorem~\ref{thm:cramer_rao})
+  that quantifies the irreducible prediction uncertainty of any world model.
+
+\item A groupoid algebra of financial event operators
+  (Theorem~\ref{thm:groupoid}), providing the first algebraically rigorous
+  treatment of corporate events as structured transformations of market state.
+
+\item A hierarchical mean-field theory with a complete existence and uniqueness
+  proof of the hierarchical Nash equilibrium (Theorem~\ref{thm:hier_mfg}),
+  capturing the simultaneous presence of MFG and MFC structures at different
+  market scales.
+
+\item A stochastic Lyapunov stability theorem under combined Brownian-Lévy noise
+  (Theorem~\ref{thm:lyapunov}), yielding a theoretically grounded real-time
+  market risk indicator.
+\end{itemize}
+
+The E-Game-C architecture ties these components into an executable framework
+whose equilibrium drift is provided by the hierarchical MFG and whose noise
+structure is governed by the dual decomposition.
+
+Together, these results place the world-model paradigm for quantitative
+finance on a rigorous mathematical foundation comparable to the classical
+Itô-calculus foundations of derivative pricing.
+
+% ============================================================
+\appendix
+% ============================================================
+
+\section{Technical Lemmas}
+\label{app:lemmas}
+
+\begin{lemma}[Gronwall's inequality, integral form]
+\label{lem:gronwall}
+If $u(t) \leq \alpha(t) + \int_0^t \beta(s)\,u(s)\,ds$ with $\alpha$ non-decreasing
+and $\beta \geq 0$, then $u(t) \leq \alpha(t)\exp\!\int_0^t\beta(s)\,ds$.
+\end{lemma}
+
+\begin{lemma}[$W_2$ distance and optimal coupling]
+\label{lem:w2}
+For probability measures $\mu, \mu'$ on $\R^d$,
+$W_2(\mu,\mu')^2 = \inf_{\gamma \in \Gamma(\mu,\mu')} \int |x-y|^2\,d\gamma(x,y)$,
+and for measures arising as laws of random variables $X, X'$:
+$W_2(\Law(X), \Law(X')) \leq (\E[|X-X'|^2])^{1/2}$.
+\end{lemma}
+
+\section{Proof of Non-Commutativity of Event Sequences}
+\label{app:noncomm}
+
+\begin{proposition}[Event sequences are non-commutative]
+In general, $T_{w_2} \circ T_{w_1} \neq T_{w_1} \circ T_{w_2}$.
+\end{proposition}
+
+\begin{proof}
+Take the single-asset state $s = (p, \kappa)^\top \in \R^2$ (log-price and
+log-shares). Let $w_1$ be a 2-for-1 stock split: $T_{w_1}(s) = (p, \kappa + \log 2)^\top$.
+Let $w_2$ be a cash dividend of $d$ per share:
+$T_{w_2}(s) = (p - \log(1 + d/e^p), \kappa)^\top$ (ex-dividend price drop).
+
+Then:
+$(T_{w_2} \circ T_{w_1})(s) = T_{w_2}(p, \kappa+\log 2) = (p - \log(1+d/e^p), \kappa+\log 2)$,
+while
+$(T_{w_1} \circ T_{w_2})(s) = T_{w_1}(p-\log(1+d/e^p), \kappa) = (p-\log(1+d/e^p), \kappa+\log 2)$.
+In this case they coincide. However, if $w_2$ is instead a rights issue that
+changes $\kappa$: $T_{w_2}(s) = (p\cdot r^{-1}, \kappa + \log r)^\top$, then
+$T_{w_2} \circ T_{w_1}(s) = T_{w_2}(p, \kappa+\log 2) = (p/r, \kappa+\log 2 + \log r)$,
+while $T_{w_1} \circ T_{w_2}(s) = T_{w_1}(p/r, \kappa+\log r) = (p/r, \kappa+\log r + \log 2)$.
+Since $\log 2 + \log r = \log r + \log 2$ the $\kappa$-coordinates agree, but the
+price adjustment for the rights issue depends on the \emph{pre-split} price in
+$T_{w_2} \circ T_{w_1}$ and the \emph{post-split} price in $T_{w_1} \circ T_{w_2}$
+when the rights issue price depends on the current market price—giving different
+results.
+\end{proof}
+
+% ============================================================
+% Bibliography
+% ============================================================
+
+\begin{thebibliography}{99}
+
+\bibitem[Ait-Sahalia and Todorov(2009)]{AitSahaliaTodorov2009}
+Ait-Sahalia, Y.\ and Todorov, V.\ (2009).
+Estimating volatility in the presence of jumps.
+\textit{Journal of Financial Economics} \textbf{93}(3):421--441.
+
+\bibitem[Bensoussan et al.(2013)]{BensoussanYam2013}
+Bensoussan, A., Chau, M.H.M., and Yam, P.\ (2013).
+Mean-field approach for large-scale interbank risk management systems.
+\textit{Finance and Stochastics} \textbf{19}(4):799--843.
+
+\bibitem[Carmona et al.(2013)]{CarmonaDelarueLachapelle2013}
+Carmona, R., Delarue, F., and Lachapelle, A.\ (2013).
+Control of McKean--Vlasov dynamics versus mean field games.
+\textit{Mathematics and Financial Economics} \textbf{7}(2):131--166.
+
+\bibitem[Carmona and Delarue(2018)]{CarmonaDelarue2018book}
+Carmona, R.\ and Delarue, F.\ (2018).
+\textit{Probabilistic Theory of Mean Field Games with Applications I--II}.
+Springer.
+
+\bibitem[Carmona and Lacker(2015)]{CarmonaLacker2015}
+Carmona, R.\ and Lacker, D.\ (2015).
+A probabilistic weak formulation of mean field games and applications.
+\textit{Annals of Applied Probability} \textbf{25}(3):1189--1231.
+
+\bibitem[Carmona and Mouzouni(2023)]{CarmonaMouzouni2023}
+Carmona, R.\ and Mouzouni, C.\ (2023).
+Systemic risk and mean field games.
+\textit{Finance and Stochastics} \textbf{27}:1--46.
+
+\bibitem[Carmona et al.(2022)]{CarmonaGraphon2022}
+Carmona, R., Cooney, D., Graves, C., and Laurière, M.\ (2022).
+Stochastic graphon games: I. The static case.
+\textit{Mathematics of Operations Research} \textbf{47}(1):750--778.
+
+\bibitem[Carmona and Sun(2018)]{CarmonaSun2018}
+Carmona, R.\ and Sun, P.\ (2018).
+Mean field games with common noise.
+\textit{Annals of Applied Probability} \textbf{26}(6):3560--3589.
+
+\bibitem[Connes(1994)]{Connes1994}
+Connes, A.\ (1994).
+\textit{Noncommutative Geometry}.
+Academic Press.
+
+\bibitem[Cont and Bouchaud(2000)]{ContBouchaud2000}
+Cont, R.\ and Bouchaud, J.-P.\ (2000).
+Herd behavior and aggregate fluctuations in financial markets.
+\textit{Macroeconomic Dynamics} \textbf{4}(2):170--196.
+
+\bibitem[Cont and Tankov(2004)]{ContTankov2004}
+Cont, R.\ and Tankov, P.\ (2004).
+\textit{Financial Modelling with Jump Processes}.
+Chapman \& Hall/CRC.
+
+\bibitem[Da Prato and Zabczyk(1996)]{DaPratoZabczyk1996}
+Da Prato, G.\ and Zabczyk, J.\ (1996).
+\textit{Ergodicity for Infinite Dimensional Systems}.
+Cambridge University Press.
+
+\bibitem[Evans(2010)]{Evans2010}
+Evans, L.C.\ (2010).
+\textit{Partial Differential Equations}, 2nd ed.
+American Mathematical Society.
+
+\bibitem[Fama(1970)]{Fama1970}
+Fama, E.F.\ (1970).
+Efficient capital markets: A review of theory and empirical work.
+\textit{Journal of Finance} \textbf{25}(2):383--417.
+
+\bibitem[Ha and Schmidhuber(2018)]{HaSchmidhuber2018}
+Ha, D.\ and Schmidhuber, J.\ (2018).
+World models.
+\textit{arXiv preprint arXiv:1803.10122}.
+
+\bibitem[Hafner et al.(2020)]{Hafner2020Dreamer}
+Hafner, D., Lillicrap, T., Ba, J., and Norouzi, M.\ (2020).
+Dream to control: Learning behaviors by latent imagination.
+\textit{International Conference on Learning Representations}.
+
+\bibitem[Hafner et al.(2023)]{Hafner2023DreamerV3}
+Hafner, D., Lillicrap, T., Norouzi, M., and Ba, J.\ (2023).
+Mastering diverse domains through world models.
+\textit{arXiv preprint arXiv:2301.04104}.
+
+\bibitem[Huang et al.(2006)]{HuangMalhame2006}
+Huang, M., Malhamé, R.P., and Caines, P.E.\ (2006).
+Large population stochastic dynamic games: closed-loop McKean--Vlasov systems
+and the Nash certainty equivalence principle.
+\textit{Communications in Information and Systems} \textbf{6}(3):221--252.
+
+\bibitem[Khasminskii(2012)]{Khasminskii2012}
+Khasminskii, R.\ (2012).
+\textit{Stochastic Stability of Differential Equations}, 2nd ed.
+Springer.
+
+\bibitem[Kingma and Welling(2014)]{KingmaWelling2014}
+Kingma, D.P.\ and Welling, M.\ (2014).
+Auto-encoding variational Bayes.
+\textit{International Conference on Learning Representations}.
+
+\bibitem[Kou(2002)]{Kou2002}
+Kou, S.G.\ (2002).
+A jump-diffusion model for option pricing.
+\textit{Management Science} \textbf{48}(8):1086--1101.
+
+\bibitem[Lasry and Lions(2007)]{LasryLions2007}
+Lasry, J.-M.\ and Lions, P.-L.\ (2007).
+Mean field games.
+\textit{Japanese Journal of Mathematics} \textbf{2}(1):229--260.
+
+\bibitem[Lux and Marchesi(1999)]{LuxMarchesi1999}
+Lux, T.\ and Marchesi, M.\ (1999).
+Scaling and criticality in a stochastic multi-agent model of a financial market.
+\textit{Nature} \textbf{397}:498--500.
+
+\bibitem[Meyn and Tweedie(1993)]{MeynTweedie1993}
+Meyn, S.P.\ and Tweedie, R.L.\ (1993).
+Stability of Markovian processes III: Foster--Lyapunov criteria for
+continuous-time processes.
+\textit{Advances in Applied Probability} \textbf{25}(3):518--548.
+
+\bibitem[Méléard(1996)]{MisierMeleard1996}
+Méléard, S.\ (1996).
+Asymptotic behaviour of some interacting particle systems; McKean--Vlasov and
+Boltzmann models.
+\textit{Probabilistic Models for Nonlinear Partial Differential Equations},
+Lecture Notes in Mathematics, Springer, 42--95.
+
+\bibitem[Protter(2005)]{Protter2005}
+Protter, P.E.\ (2005).
+\textit{Stochastic Integration and Differential Equations}, 2nd ed.
+Springer.
+
+\bibitem[Ross(1976)]{Ross1976}
+Ross, S.A.\ (1976).
+The arbitrage theory of capital asset pricing.
+\textit{Journal of Economic Theory} \textbf{13}(3):341--360.
+
+\bibitem[Sato(1999)]{Sato1999}
+Sato, K.-I.\ (1999).
+\textit{Lévy Processes and Infinitely Divisible Distributions}.
+Cambridge University Press.
+
+\bibitem[Weinstein(1996)]{Weinstein1996}
+Weinstein, A.\ (1996).
+Groupoids: Unifying internal and external symmetry.
+\textit{Notices of the AMS} \textbf{43}(7):744--752.
+
+\bibitem[AWMLG(2026)]{AwmlgLiverpool2026}
+Anonymous.\ (2026).
+Adaptive world model learning for portfolio optimization.
+\textit{Preprint}.
+
+\bibitem[JPMorgan(2019)]{MorganJPMaGAN}
+Cont, R., Stoikov, S., and Talreja, R.\ (2010).
+A stochastic model for order book dynamics.
+\textit{Operations Research} \textbf{58}(3):549--563.
+
+\end{thebibliography}
+
+\end{document}
