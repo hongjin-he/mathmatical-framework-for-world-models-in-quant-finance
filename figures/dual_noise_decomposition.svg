@@ -1,0 +1,103 @@
+<svg viewBox="0 0 880 500" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica Neue, Arial, sans-serif">
+  <defs>
+    <marker id="a-main" markerWidth="8" markerHeight="8" refX="5" refY="4" orient="auto">
+      <path d="M1,1 L7,4 L1,7 Z" fill="#2D3748"/>
+    </marker>
+    <marker id="a-blue" markerWidth="8" markerHeight="8" refX="5" refY="4" orient="auto">
+      <path d="M1,1 L7,4 L1,7 Z" fill="#3182CE"/>
+    </marker>
+    <marker id="a-orange" markerWidth="8" markerHeight="8" refX="5" refY="4" orient="auto">
+      <path d="M1,1 L7,4 L1,7 Z" fill="#DD6B20"/>
+    </marker>
+    <marker id="a-green" markerWidth="8" markerHeight="8" refX="5" refY="4" orient="auto">
+      <path d="M1,1 L7,4 L1,7 Z" fill="#276749"/>
+    </marker>
+  </defs>
+
+  <rect width="880" height="500" fill="#FAFBFC" rx="8"/>
+
+  <!-- Title -->
+  <text x="440" y="34" text-anchor="middle" font-size="16" font-weight="700" fill="#1A202C">Dual Noise Decomposition via Lévy-Itô</text>
+  <text x="440" y="52" text-anchor="middle" font-size="11" fill="#718096">Physical volatility Σ_τ (Brownian) ⊕ Behavioral noise ν_η (Lévy jumps) — estimated from high-frequency data via bipower variation</text>
+  <line x1="40" y1="64" x2="840" y2="64" stroke="#E2E8F0" stroke-width="1"/>
+
+  <!-- ===== TOP: Raw Signal ===== -->
+  <rect x="320" y="78" width="240" height="54" rx="6" fill="#F7FAFC" stroke="#CBD5E0" stroke-width="1.5"/>
+  <text x="440" y="97" text-anchor="middle" font-size="11" font-weight="600" fill="#4A5568">Raw Log-Return Process</text>
+  <text x="440" y="116" text-anchor="middle" font-size="10.5" fill="#2D3748">dX_τ = b dτ + σ dW_τ + ∫γ(z) Ñ(dτ,dz)</text>
+  <text x="440" y="128" text-anchor="middle" font-size="8.5" fill="#A0AEC0">(Lévy-Itô decomposition, Theorem 2.1)</text>
+
+  <!-- Arrow down to split -->
+  <line x1="440" y1="132" x2="440" y2="158" stroke="#2D3748" stroke-width="1.5" marker-end="url(#a-main)"/>
+  <text x="450" y="150" font-size="9" fill="#718096">Bipower Variation</text>
+
+  <!-- ===== SPLIT NODE ===== -->
+  <circle cx="440" cy="168" r="10" fill="#1A202C"/>
+  <text x="440" y="172" text-anchor="middle" font-size="10" fill="white" font-weight="700">⊕</text>
+
+  <!-- Left arrow to Σ_τ -->
+  <line x1="430" y1="168" x2="220" y2="220" stroke="#3182CE" stroke-width="1.8" marker-end="url(#a-blue)"/>
+  <text x="300" y="202" text-anchor="middle" font-size="9" fill="#3182CE">Σ_τ (physical)</text>
+
+  <!-- Right arrow to ν_η -->
+  <line x1="450" y1="168" x2="660" y2="220" stroke="#DD6B20" stroke-width="1.8" marker-end="url(#a-orange)"/>
+  <text x="580" y="202" text-anchor="middle" font-size="9" fill="#DD6B20">ν_η (behavioral)</text>
+
+  <!-- ===== LEFT BRANCH: Physical Volatility ===== -->
+  <rect x="60" y="222" width="310" height="170" rx="8" fill="#EBF8FF" stroke="#3182CE" stroke-width="2"/>
+  <text x="215" y="244" text-anchor="middle" font-size="12" font-weight="700" fill="#2B6CB0">Σ_τ — Physical Volatility</text>
+  <text x="215" y="259" text-anchor="middle" font-size="9.5" fill="#4A5568">(Brownian component)</text>
+  <line x1="70" y1="264" x2="360" y2="264" stroke="#BEE3F8" stroke-width="1"/>
+
+  <text x="75" y="281" font-size="9.5" fill="#2D3748" font-weight="600">Origin:</text>
+  <text x="75" y="294" font-size="9.5" fill="#4A5568">Aggregate microstructure randomness</text>
+  <text x="75" y="307" font-size="9.5" fill="#4A5568">Market friction · inventory risk</text>
+
+  <text x="75" y="322" font-size="9.5" fill="#2D3748" font-weight="600">Estimation:</text>
+  <text x="75" y="335" font-size="9.5" fill="#4A5568">BV_T = μ₁⁻² Σ_{i} |ΔX_{i−1}| |ΔX_i|</text>
+  <text x="75" y="348" font-size="9.5" fill="#4A5568">plim BV_T = ∫₀ᵀ σ_τ² dτ  (Barndorff-Nielsen)</text>
+
+  <text x="75" y="363" font-size="9.5" fill="#2D3748" font-weight="600">Role in model:</text>
+  <text x="75" y="376" font-size="9.5" fill="#4A5568">Enters diffusion coefficient of FPK</text>
+  <text x="75" y="384" font-size="8.5" fill="#718096">∂_t m = −div(b* m) + ½ div(Σ_τ ∇m)</text>
+
+  <!-- Waveform illustration (Gaussian-ish curve) -->
+  <polyline points="75,395 90,395 100,388 110,401 120,385 130,403 140,389 150,395 160,393 170,397 185,395"
+    fill="none" stroke="#3182CE" stroke-width="1.5"/>
+  <text x="75" y="410" font-size="8" fill="#718096">Typical time-series: continuous, no jumps</text>
+
+  <!-- ===== RIGHT BRANCH: Behavioral Noise ===== -->
+  <rect x="510" y="222" width="310" height="170" rx="8" fill="#FFF5EB" stroke="#DD6B20" stroke-width="2"/>
+  <text x="665" y="244" text-anchor="middle" font-size="12" font-weight="700" fill="#C05621">ν_η — Behavioral Noise</text>
+  <text x="665" y="259" text-anchor="middle" font-size="9.5" fill="#744210">(Lévy jump component)</text>
+  <line x1="520" y1="264" x2="810" y2="264" stroke="#FBD38D" stroke-width="1"/>
+
+  <text x="525" y="281" font-size="9.5" fill="#2D3748" font-weight="600">Origin:</text>
+  <text x="525" y="294" font-size="9.5" fill="#4A5568">Crowd panic, herding, sentiment</text>
+  <text x="525" y="307" font-size="9.5" fill="#4A5568">News shocks · institutional rebalancing</text>
+
+  <text x="525" y="322" font-size="9.5" fill="#2D3748" font-weight="600">Estimation:</text>
+  <text x="525" y="335" font-size="9.5" fill="#4A5568">RV_T − BV_T → Σ_{0≤τ≤T} (ΔX_τ)²</text>
+  <text x="525" y="348" font-size="9.5" fill="#4A5568">Fit α-stable law: ν(dz) = c|z|^{−α−1}dz</text>
+
+  <text x="525" y="363" font-size="9.5" fill="#2D3748" font-weight="600">Role in model:</text>
+  <text x="525" y="376" font-size="9.5" fill="#4A5568">Jump term in FPK; Cramér-Rao bound</text>
+  <text x="525" y="384" font-size="8.5" fill="#718096">I(θ) = Σ_τ ⊕ ν_η  (Fisher information)</text>
+
+  <!-- Spiky waveform illustration -->
+  <polyline points="525,395 540,395 545,390 550,395 560,395 565,372 570,395 580,395 590,392 595,395 605,395 610,378 615,395 625,395 630,393 635,395 650,395"
+    fill="none" stroke="#DD6B20" stroke-width="1.5"/>
+  <text x="525" y="410" font-size="8" fill="#718096">Typical time-series: intermittent large jumps</text>
+
+  <!-- ===== Bottom: joint into model ===== -->
+  <line x1="215" y1="392" x2="215" y2="446" stroke="#3182CE" stroke-width="1.5" marker-end="url(#a-blue)"/>
+  <line x1="665" y1="392" x2="665" y2="446" stroke="#DD6B20" stroke-width="1.5" marker-end="url(#a-orange)"/>
+  <line x1="215" y1="456" x2="665" y2="456" stroke="#276749" stroke-width="1.5"/>
+  <line x1="440" y1="456" x2="440" y2="472" stroke="#276749" stroke-width="1.8" marker-end="url(#a-green)"/>
+
+  <rect x="280" y="474" width="320" height="18" rx="4" fill="#F0FFF4" stroke="#276749" stroke-width="1.5"/>
+  <text x="440" y="487" text-anchor="middle" font-size="10" font-weight="600" fill="#276749">Combined Fisher Info: I(θ) = Σ_τ ⊕ ν_η → Cramér-Rao lower bound on prediction variance</text>
+
+  <!-- Dividers between columns -->
+  <line x1="440" y1="222" x2="440" y2="392" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,3"/>
+</svg>

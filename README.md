@@ -27,6 +27,22 @@ We develop a rigorous mathematical theory for *market world models* — probabil
 
 ---
 
+## Architecture Overview
+
+### Figure 1 — E-Game-C World Model Architecture
+
+![E-Game-C Architecture](figures/egame_c_architecture.svg)
+
+The three modules implement the paper's five contributions sequentially: the Encoder performs Lévy-Itô decomposition and bipower-variation calibration; the Game module solves the HJB+FPK system via DGM and neural fictitious play; the Controller applies Stochastic Lyapunov stability analysis and enforces the Cramér-Rao prediction floor.
+
+### Figure 2 — Dual Noise Decomposition
+
+![Dual Noise Decomposition](figures/dual_noise_decomposition.svg)
+
+The Lévy-Itô theorem guarantees that any semimartingale decomposes into a continuous (Brownian) component Σ_τ and a pure-jump component ν_η. These are estimated from high-frequency data via bipower variation: BV_T converges to the integrated physical variance, and RV_T − BV_T isolates the jump quadratic variation.
+
+---
+
 ## Table of Contents
 
 1. [Probabilistic Foundations](#1-probabilistic-foundations)
